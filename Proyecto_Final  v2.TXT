@@ -1,0 +1,358 @@
+********************************************************************************
+*                                                                              *
+*                        Listado del modelo formateado:                        *
+* C:\Users\josej\OneDrive\Escritorio\Proyecto_Promodel\Proyecto_Final  v2.mod  *
+*                                                                              *
+********************************************************************************
+
+  Unidades de Tiempo:                Minutos
+  Unidades de Distancia:             Metros
+
+
+********************************************************************************
+*                                  Locaciones                                  *
+********************************************************************************
+
+  Nombre               Cap      Unidades Estadist         Reglas                Costos      
+  -------------------- -------- -------- ---------------- --------------------- ------------
+  Mesa_de_preparacion  1        1        Series de tiempo Más Tiempo, ,                     
+  Horno                3        1        Series de tiempo Más Tiempo, ,                     
+  Rack_Final           20       1        Series de tiempo Más Tiempo, ,                     
+  Batidora             1        1        Series de tiempo Más Tiempo, ,                     
+  Almacenaje           INFINITE 1        Series de tiempo Más Tiempo, FIFO,                 
+  Mesa_de_preparacion2 2        1        Series de tiempo Más Tiempo, ,                     
+  Mesa_de_preparacion3 2        1        Series de tiempo Más Tiempo, ,                     
+  Entrada              1        1        Series de tiempo Más Tiempo, ,                     
+  Cajero               1        1        Series de tiempo Más Tiempo, ,                     
+  tipos_de_panes       inf      5        Series de tiempo Más Tiempo, , Primera             
+  tipos_de_panes.1     inf      1        Series de tiempo Más Tiempo, ,                     
+  tipos_de_panes.2     inf      1        Series de tiempo Más Tiempo, ,                     
+  tipos_de_panes.3     inf      1        Series de tiempo Más Tiempo, ,                     
+  tipos_de_panes.4     inf      1        Series de tiempo Más Tiempo, ,                     
+  tipos_de_panes.5     inf      1        Series de tiempo Más Tiempo, ,                     
+  fila_clientes        INFINITE 1        Series de tiempo Más Tiempo, FIFO,                 
+
+
+********************************************************************************
+*                                  Entidades                                   *
+********************************************************************************
+
+  Nombre        Velocidad (mpm) Estadist         Costos      
+  ------------- ------------ ---------------- ------------
+  Materia_prima 50           Series de tiempo             
+  Masa          50           Series de tiempo             
+  Charola       50           Series de tiempo             
+  Clientes      50           Series de tiempo             
+  limpieza      50           Series de tiempo             
+
+
+********************************************************************************
+*                                Redes de Ruta                                 *
+********************************************************************************
+
+  Nombre   Tipo          T/V                   Desde    Hasta    BI   Distancia/Tiempo Factor de Velocidad
+  -------- ------------- --------------------- -------- -------- ---- ---------------- ------------
+  Red1     Sobrepasar    Velocidad & Distancia N1       N2       Bi   20               1
+                                               N2       N3       Bi   33               1
+                                               N3       N5       Bi   57.49            1
+                                               N5       N6       Bi   47               1
+                                               N6       N7       Bi   40               1
+                                               N7       N8       Bi   33.24            1
+                                               N8       N1       Bi   100              1
+                                               N8       N4       Bi   150              1
+                                               N4       N9       Bi   0                1
+
+
+********************************************************************************
+*                                  Interfaces                                  *
+********************************************************************************
+
+  Red        Nodo       Locación             
+  ---------- ---------- --------------------
+  Red1       N1         Almacenaje           
+             N2         Mesa_de_preparacion  
+             N3         Batidora             
+             N5         Mesa_de_preparacion2 
+             N6         Mesa_de_preparacion3 
+             N7         Horno                
+             N8         Rack_Final           
+             N4         tipos_de_panes       
+
+
+********************************************************************************
+*                                    Mapeo                                     *
+********************************************************************************
+
+  Red        Desde      Hasta      Dest
+  ---------- ---------- ---------- ------------
+  Red1       N2         N1         
+             N3         N2         
+             N5         N3         
+             N6         N5         
+             N7         N8         
+             N8         N1         
+             N1         N2         
+             N2         N3         
+             N7         N6         
+             N3         N5         
+             N8         N7         
+             N5         N6         
+             N1         N8         
+             N6         N7         
+             N8         N4         
+
+
+********************************************************************************
+*                                   Recursos                                   *
+********************************************************************************
+
+                               Rec         Ent                                             
+  Nombre      Unidades Estadíst   Buscar      Buscar     Ruta       Movimiento    Costos      
+  ----------- ----- ---------- ----------- ---------- ---------- ------------- ------------
+  Trabajador1 1     Por Unidad Más Cercano Más Tiempo Red1       Vacío: 50 mpm             
+                                                      Home: N1   Lleno: 50 mpm             
+                                                      (Regresar)                           
+
+  Trabajador2 1     Por Unidad Más Cercano Más Tiempo Red1       Vacío: 50 mpm             
+                                                      Home: N8   Lleno: 50 mpm             
+                                                      (Regresar)                           
+
+
+********************************************************************************
+*                                Procesamiento                                 *
+********************************************************************************
+
+                                              Proceso                             Enrutamiento
+
+ Entidad       Locación             Operación            Blk  Salida        Destino              Regla    Lógica de Movimiento
+ ------------- -------------------- ------------------   ---- ------------- -------------------- -------  ------------
+ Materia_prima Almacenaje                                1    Materia_prima Mesa_de_preparacion  FIRST 1  Move With Trabajador1 then free
+ Materia_prima Mesa_de_preparacion  Get Trabajador1
+                                    Wait w(6,1)
+                                    //medidas de receta y 
+                                    //preparacion charola
+                                    
+                                    
+                                    wait u(7,2)
+                                    //limpieza
+                                    
+                                    Free Trabajador1     1    Materia_prima Batidora             FIRST 1  Move With Trabajador1 then free
+ Materia_prima Batidora             wait e(10)
+                                    Get Trabajador1
+                                    Wait e(5)
+                                    //tiempo de revoltura 
+                                    //y de adicionada
+                                    
+                                    wait u(12,2)
+                                    //limpieza
+                                    Free Trabajador1     1    Masa          Mesa_de_preparacion2 FIRST 1  Move With Trabajador1 then free
+ Masa          Mesa_de_preparacion2 wait e(30)
+                                    //Reposo de masa en
+                                    // ambiente controlado
+                                                         1    Masa          Mesa_de_preparacion3 FIRST 1  Move With Trabajador1 then free
+ Charola       Horno                Wait u(17,5,2.5)
+                                                         1    Charola       Rack_Final           FIRST 1  Move With Trabajador1 then free
+ Charola       Rack_Final           wait e(10)
+                                    //enfriado 
+                                    Get Trabajador1
+                                    
+                                    Wait e(6)
+                                    //empaque
+                                    
+                                    
+                                    
+                                    Free Trabajador1
+                                    
+                                                         1    Charola       tipos_de_panes       FIRST 1  Move with Trabajador2 then Free
+                                                                                                           
+                                                                                                          
+                                                                                                             If cont_dulce = 1 Then {
+                                                                                                             Wait e(5)
+                                                                                                             pt_dulce = pan_dulce
+                                                                                                             pan_dulce = pan_dulce - pan_dulce
+                                                                                                          
+                                                                                                            }
+                                                                                                             
+                                                                                                             
+                                                                                                             If cont_dulce = 0 Then {
+                                                                                                            Dec pan_salado, 10
+                                                                                                            Wait e(5)
+                                                                                                             pt_salado = 10
+                                                                                                          }
+                                                                                                            
+                                                                                                             If cont_dulce = 2 Then {
+                                                                                                             Dec pan_bagles, 11
+                                                                                                             Wait e(5)
+                                                                                                             pt_bagles =  11
+                                                                                                          }
+                                                                                                             
+                                                                                                             
+                                                                                                             If cont_dulce = 3 Then {
+                                                                                                             Dec donas, 10
+                                                                                                             Wait e(5)
+                                                                                                             pt_donas =  10
+                                                                                                          }
+                                                                                                             
+                                                                                                             
+                                                                                                             If cont_dulce = 4 Then {
+                                                                                                             Dec pan_cuernitos, 5
+                                                                                                             Wait e(5)
+                                                                                                             pt_cuernitos = 5
+                                                                                                          }
+                                                                                                            
+                                                                                                             
+                                                                                                             
+                                                                                                             cont_dulce = cont_dulce +1 
+                                                                                                             
+                                                                                                             
+                                                                                                                
+                                                                                                                
+                                                                                                          
+ Masa          Mesa_de_preparacion3 Get Trabajador2
+                                    Wait er(12,2)
+                                    //amasado de la masa
+                                    Wait w(16,3)
+                                    //formados de la figuras de pan
+                                    
+                                    wait u(5,2)
+                                    //limpieza
+                                    
+                                    Free Trabajador2
+                                    
+                                    Wait 60 min
+                                    //segunda fermentación
+                                                         1    Charola       Horno                FIRST 3  tipo_cha = Tipo_de_charola()
+                                                                                                          
+                                                                                                          Graphic tipo_cha
+                                                                                                          
+                                                                                                          If tipo_cha = 1 then{
+                                                                                                          Inc pan_dulce,15
+                                                                                                          }
+                                                                                                          
+                                                                                                          If tipo_cha = 2 Then {
+                                                                                                          Inc pan_salado,11
+                                                                                                          }
+                                                                                                          
+                                                                                                          If tipo_cha = 3 then{
+                                                                                                          Inc pan_bagles,11
+                                                                                                          }
+                                                                                                          
+                                                                                                          If tipo_cha = 4 then{
+                                                                                                          Inc donas,20
+                                                                                                          }
+                                                                                                          
+                                                                                                          If tipo_cha = 5 then{
+                                                                                                          Inc pan_cuernitos,15
+                                                                                                          }
+                                                                                                          
+                                                                                                          
+                                                                                                          Move With Trabajador2 then free
+ Charola       tipos_de_panes                            1    Charola       EXIT                 FIRST 1  
+ Clientes      Entrada                                   1    Clientes      tipos_de_panes       FIRST 1  wait 5 min
+                                                                                                          
+ Clientes      tipos_de_panes       wait 10 min
+                                    
+                                    If tipo_cliente = 1 Then {
+                                    	If pt_dulce >= 3 then Dec pt_dulce, 3
+                                    	If pt_bagles >= 2 Then Dec pt_bagles,2
+                                    	if pt_salado >= 1 Then Dec pt_salado,1
+                                    	//If pan_cuernitos 
+                                    	//if donas
+                                    }
+                                    If tipo_cliente = 2 Then {
+                                    	If pt_dulce >= 2 then Dec pt_dulce, 2
+                                    	//If pt_bagles >= 2 Then Dec pt_bagles,2
+                                    	if pt_salado >= 1 Then Dec pt_salado,1
+                                    	If pt_cuernitos >= 2 Then Dec pt_cuernitos,2 
+                                    	//if donas
+                                    }
+                                    If tipo_cliente = 3 Then {
+                                    	If pt_dulce >= 1 then Dec pt_dulce, 1
+                                    	//If pt_bagles >= 2 Then Dec pt_bagles,2
+                                    	//if pt_salado >= 1 Then Dec pt_salado,1
+                                    	//If pan_cuernitos 
+                                    	if pt_donas >= 3 Then Dec pt_donas,3
+                                    }
+                                    	                    1    Clientes      fila_clientes        FIRST 1  
+ Clientes      fila_clientes                             1    Clientes      Cajero               FIRST 1  
+ Clientes      Cajero               wait 5 min           1    Clientes      EXIT                 FIRST 1  
+ limpieza      Almacenaje           Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2
+                                                         1    limpieza      Batidora             FIRST 1  Move With Trabajador2 Then free
+ limpieza      Batidora             Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2     1    limpieza      Mesa_de_preparacion  FIRST 1  Move With Trabajador2 Then free
+ limpieza      Mesa_de_preparacion  Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2     1    limpieza      Mesa_de_preparacion3 FIRST 1  Move With Trabajador2 Then free
+ limpieza      Mesa_de_preparacion3 Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2     1    limpieza      Horno                FIRST 1  Move With Trabajador2 Then free
+ limpieza      Horno                Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2     1    limpieza      Rack_Final           FIRST 1  Move With Trabajador2 Then free
+                                                                                                          
+ limpieza      Rack_Final           Get Trabajador2
+                                    wait e(5)
+                                    Free Trabajador2     1    Masa          EXIT                 FIRST 1  
+
+
+********************************************************************************
+*                                   Arribos                                    *
+********************************************************************************
+
+  Entidad       Locación   Cant. por Arribo Primera Vez Ocurrencias Frecuencia Lógica
+  ------------- ---------- ---------------- ----------- ----------- ---------- ------------
+  Materia_prima Almacenaje 1                0           4           e(15)      
+  Clientes      Entrada    1                120         INF         e (15)     
+                                                                               tipo_cliente = num_cliente()
+                                                                               Graphic tipo_cliente
+  limpieza      Almacenaje 1                7 hr        1                      
+
+
+********************************************************************************
+*                                  Atributos                                   *
+********************************************************************************
+
+  ID           Tipo         Clasificación
+  ------------ ------------ -------------
+  tipo_cliente Integer      Entidad      
+
+
+********************************************************************************
+*                              Variables (global)                              *
+********************************************************************************
+
+  ID            Tipo         Valor Inicial Estadist        
+  ------------- ------------ ------------- ----------------
+  pan_dulce     Integer      0             Series de tiempo
+  pan_salado    Integer      0             Series de tiempo
+  pan_bagles    Integer      0             Series de tiempo
+  donas         Integer      0             Series de tiempo
+  pan_cuernitos Integer      0             Series de tiempo
+  tipo_cha      Integer      0             Series de tiempo
+  pt_dulce      Integer      0             Series de tiempo
+  pt_salado     Integer      0             Series de tiempo
+  pt_bagles     Integer      0             Series de tiempo
+  pt_donas      Integer      0             Series de tiempo
+  pt_cuernitos  Integer      0             Series de tiempo
+  cont_dulce    Integer      0             Series de tiempo
+
+
+********************************************************************************
+*                           Distribución de Usuario                            *
+********************************************************************************
+
+  ID              Tipo         Acumulativa  Porcentaje   Valor       
+  --------------- ------------ ------------ ------------ ------------
+  Tipo_de_charola Discreta     No           8            1           
+                                            50           2           
+                                            17           3           
+                                            10           4           
+                                            15           5           
+  num_cliente     Discreta     No           30           1           
+                                            40           2           
+                                            30           3           
+
+
